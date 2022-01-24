@@ -137,10 +137,22 @@ Insieme di design patterns per determinare i dati che sono cambiati (freschi) e 
 \end{itemize}
 
 \subsection{CDC, statefull/stateless and transactionality}
-DA COMPLETARE
+\textbf{Change Data Capture} (CDC) è un insieme di design patterns usati per determinare e tenere traccia dei dati che sono cambiati, in modo che le azioni possano essere eseguite utilizzando i dati modificati.
+\newline Per \textbf{stateful} intendiamo la capacità di un sistema di ricordare eventi o interazioni dell'utente precedenti. Mentre, per \textbf{stateless} si intende la capacità di un sistema di rispondere sempre allo stesso modo indipendentemente da qualsiasi stato precedente.
+\newline Il \textit{Diff\&Where CDC pattern} che abbiamo visto è \textbf{stateless} poiché si sta leggendo esternamente e ogni volta che viene eseguito, il CDC prende il file \textit{sync.json} e lo aggiorna. Non c'è quindi una storia degli "stati passati". CDC può essere sia stateful che stateless ma è meglio che sia stateless. 
+\newline CDC può essere \textbf{transactional}? Per \textit{transactional} si intende che rispetti le proprietà ACID (Atomicity, Consistency, Isolation e Durability), in altri termini che possano essere eseguiti commit e rollback. 
+Il Diff\&Where incremental pattern può fallire, dal momento che l'inserimento delle righe nel database e l'aggiornamento del file \textit{sync.json} viene fatto in parallelo. Se l'inserimento delle righe fallisce (comune per l'inserimento di grandi quantità di righe), però, l'aggiornamento del file \textit{sync.json} viene fatto comunque.
+Per risolvere questo tipo di problema bisogna fare in modo che CDC diventi transactional. Per fare questo, qunado ci connettiamo a SQL puliamo tutti i file ".tmp" del Data Lake e successivamente, dopo avere preso le nuove righe con "Diff\&Where", eseguiamo sequenzialmente l'inserimento elle righe nel Data Lake e l'aggiornamento del file \textit{sync.json}. Questo pattern viene chiamato \textbf{Move and Rename} ed è basato sull'utilizzo di nomi temporanei, sulla rinomina dei file in una volta sola al termine del processo di scrittura e su uno step finale di pulizia da eseguire all'inizio di ogni "lavoro".
 
 \subsection{Differences between log and registry when we try to implement the CDC pattern}
-DA COMPLETARE
+Per prima cosa definiamo Registry Data Table e Log Data Table. Una \textbf{Log Data Table} è una tabella che registra gli eventi (per esempio, acquisti/vendite di un'azienda), mentre un \textbf{Registry Data Table} è una tabella che descrive le entità che potrebbero cambiare nel corso del tempo (per esempio, la lista dei materiali necessari a produrre qualcosa).
+I CDC pattern tradizionali presentano diverse diverse criticità e il modo migliore per risolvere questo problema è utilizzare il \textbf{Diff\&Where incremental pattern}, che è basato su:
+\begin{itemize}
+    \item Una stategia \textit{"where-like"} per la log table. Ovvero, si sfruttano i timestamps contenuti nella tabella per estrarre solo le righe dove il timestamp è maggiore rispetto all'ultimo timestamp dell'iterazione precedente.
+    \item Una stategia \textit{"diff-like"} per la registry table. Viene calcolato un hash per le chiavi (KHASH) e i valori (HASH) della tabella e si confrontano khash e hash in due instanti diversi della tabella per capire se c'è sato un INSERT, un UPDATE o una DELETE (es. in presentazione 004 - slide 23).
+\end{itemize}
+In questo modo tutti i problemi dei tradizionali patterns sono risolti.
+
 \subsection{What could be used the wrapper pattern for? Why?
 Distribute Computation}
 L’adapter pattern permette di mitigare l’effetto di Vendor Lock-in in quanto le applicazioni non dipendono direttamente da un servizio esterno, ma comunicano con esso tramite un'interfaccia interna (Wrapper) che espone funzionalità del servizio esterno (e può decidere anche di nascondere alcune funzionalità). In questo modo, nel caso si scegliesse di cambiare fornitore del servizio esterno basterebbe cambiare il codice all'interno dell'Adapter Pattern, senza dover cambiare ogni singola applicazione.
@@ -155,6 +167,8 @@ MapReduce è un modello di programmazione proposto in un documento di Google (20
     \item Gli input e le operazioni sugli input vengono elaborati in parallelo da macchine diverse utilizzando una funzione di partizionamento (ad esempio, hash(key) mod R)
     
 \end{itemize}
+
+\section{Distribute Computation}
 \subsection{Hadoop Architecture}
 Hadoop è un Framework usato per facilitare lo sviluppo di servizi multi-nodo, basato sull'assunzione che l'hardware può fallire.
 I componenti principali sono:
@@ -248,12 +262,36 @@ Si cerca di evitare di avere operazioni che richiedono righe distribuite su diff
 
 \subsection{Assumption(s) on a transformation distributed over Apache Spark}
 \subsection{Describe a Spark Job end to end}
+\begin{enumerate}
+    \item Un'applicazione spark è inviata utilizzando la \textbf{spark submit utility}
+    \item Il \textbf{Cluster Resource Manager} avvia l'\textbf{Application Master} e alloca le risorse necessarie
+    \item L'Application Master registra se stessso nel Resource Manager per permettere un comunicazione bidirezionale
+    \item \textbf{Spark Driver} esegue il codice comunicando con l'Application Master
+    \item Il driver converte implicitamente il codice dell'utente da un piano logico a un piano esecutivo passando per il \textbf{DAG} e il \textbf{DAGScheduler}
+    \item Il Driver negozia le \textbf{risorse} con il Cluster Manager. In questo modo, le fasi (\textbf{stages}) vengono create dal DAGScheduler
+    \item Gli \textbf{Executors} vengono avviati sui \textbf{Workers}. Quando cominciano si registrano col Driver
+    \item Il Driver tiene traccia dello \textbf{stato degli Executors} per essere in grado di ridistribuire gli executors "morti" ad altri lavoratori
+    \item Il Driver manda degli incarichi al \textbf{Cluster Manager} in base alla collocazione dei dati
+    \item L'Application Master lancia il container fornendo al gestore del nodo una configurazione del container
+    \item Il primo \textbf{RDD} è creato leggendo i dati dall'HDFS in partizioni differenti su nodi differenti in parallelo: ogni nodo ha un sottoinsieme dei dati
+    \item Durante l'esecuzione dell'applicazione , il \textbf{Driver} comunica con l'\textbf{Application Master} per ottenere lo stato dell'applicazione
+    \item Quando l'applicazione ha terminato, l'Application Master si rimuove dal Resource Manager e \textbf{libera tutte le risorse}
+\end{enumerate}
+
 \subsection{What is a transaction? What is an Index? How physically is SQL organized?}
 \subsection{Describe what happens when you try to execute a SQL Statements}
 \subsection{How to write from Apache Spark? Pro and Con(s)}
 \subsection{Spark Dataframe}
 \section{Distribute Processes}
 \subsection{What is a SOA? How can you map SOA with Architectural Principles?}
+Ci sono numerose definizioni di cosa sia una Service-Oriented Architecture, tra cui:
+\begin{itemize}
+    \item "Service-Oriented Architecture (SOA) è uno stile architetturale per creare un'architettura IT aziendale che sfrutti i principi dell'orientamento ai servizi per ottenere una \textbf{più stretta relazione tra business e sistema informatico} che supporta il business" (IBM 2007)
+    \item "Service-Oriented Architecture (SOA) è uno stile architetturale che supporta l'\textbf{orientamento ai servizi}. L'orientamento ai servizi è un modo di pensare in termini di \textbf{servizi}, \textbf{sviluppo basato sui servizi} e \textbf{risultati dei servizi}" (The Open Group 2007)
+    \item "Service-Oriented Architecture (SOA) è un paradigma per organizzare e utilizzare capacità distribuite che potrebbero essere sotto il controllo di diversi domini di proprietà" (OASIS)
+\end{itemize}
+DA FINIRE...
+
 \subsection{During the class we discussed several times about differences between Services and uServices: can you give an example to show the differences?}
 \subsection{Service Definition, Service Queue, Service Broker}
 \subsection{Describe all Communication Models we have seen during the class}
