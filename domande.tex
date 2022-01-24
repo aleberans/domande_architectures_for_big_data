@@ -294,7 +294,83 @@ DA FINIRE...
 
 \subsection{During the class we discussed several times about differences between Services and uServices: can you give an example to show the differences?}
 \subsection{Service Definition, Service Queue, Service Broker}
-\subsection{Describe all Communication Models we have seen during the class}
+\subsection{IMPORTANT - Describe all Communication Models we have seen during the class}
+\subsubsection{Syncronous Service Call}
+
+\begin{enumerate}
+    \item I client compilano i Message In
+    \item Il middleware ESB effettua il marshalling della richiesta
+    \item Il service broker invia la richiesta allo specifico Application Server
+    \item L'application server esegue la logica e ritorna il message out
+    \item Ogni esecuzione è corredata con:
+    \begin{enumerate}
+        \item Uno status che cambia durante l'esecuzione (To-Do, WIP, DONE|ERROR)
+        \item Un trace log (esecuzione applicativa e tecnica)
+    \end{enumerate}
+    \item L'esecuzione tecnica viene tracciata all'interno della Service Queue Table per ulteriori analisi e per verificarne gli stati
+\end{enumerate}
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=\linewidth]{fig/synchronous_service_call.png}
+    \label{fig:Synchronous service call}
+\end{figure}
+
+\subsubsection{Asynchronous service call}
+\begin{enumerate}
+    \item I client compilano i Message In
+    \item Il service broker ritorna immediatamente il Communication ID e aggiunge il servizio alla Service Queue
+    \item Quando arriva il momento dell'esecuzione, il Service Broker invia l'esecuzione a l'Application Server corretto
+    \item Il client può verificare lo stato di esecuzione utilizzando il Communication ID
+    \item Il client può ottenere i risultati dell'esecuzione quando lo stato è DONE utilizzando il communicationID e interrogando la ServiceQueue per estrarre il messageOut
+\end{enumerate}
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=\linewidth]{fig/asynchronous_service_call.png}
+    \label{fig:Asynchronous service call}
+\end{figure}
+
+\subsubsection{Stream Outbound File Reference}
+\begin{enumerate}
+    \item Stream Outbound File Reference model è un'estensione degli Async services
+    \item Può essere utilizzato quando verrà generato un output di grandi dimensioni
+    \item La stessa strategia del CommunicationID viene utilizzata per verificare lo stato
+    \item Inoltre un ReferenceID consente al client di aprire il flusso verso il file creato
+\end{enumerate}
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=\linewidth]{fig/stream_outbound_file_reference.png}
+    \label{fig:Stream Outbound File Reference}
+\end{figure}
+
+\subsubsection{Pub/Sub Service Call-back}
+\begin{enumerate}
+    \item Pub/Sub consente ai clienti di iscriversi a un topic e di ricevere una callback quando si verifica un nuovo evento sul topic sottoscritto
+    \item L'ESB nasconde la complessità del Message Bus (Apache Kafka) per semplificare la vita del client
+    \item Ogni volta che si verifica un nuovo evento, l'ESB chiama la callback del client fornendo un ObjectID
+    \item Il client può ora utilizzare l'ObjectID fornito per ottenere nuovi dati
+\end{enumerate}
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=\linewidth]{fig/pub_sub_service_call_back.png}
+    \label{fig:Pub/Sub Service Call-back}
+\end{figure}
+
+\subsubsection{Batch Sync Data Process}
+\begin{enumerate}
+    \item Un CDC Job consente l'estrazione incrementale dei dati batch da qualsiasi sistema legacy
+    \item Le nuove righe estratte vengono salvate su Data Lake (o DWH) su un percorso denominato secondo convenzione
+    \item Un servizio gateway – Reverse CDC Job – esiste per inoltrare queste estrazioni incrementali sui sistemi di destinazione (ad es. SQL DB tramite MERGE o tramite INSERT, APIs, ...)
+\end{enumerate}
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=\linewidth]{fig/batch_sync_data_process.png}
+    \label{fig:Batch Sync Data Process}
+\end{figure}
 \section{Project Management}
 \subsection{CAPEX vs OPEX}
 CAPEX: La spesa in conto capitale (capex o CAPEX) è il denaro speso per acquistare o migliorare un bene fisso, come edifici, veicoli, attrezzature. Il software è considerato una risorsa.
