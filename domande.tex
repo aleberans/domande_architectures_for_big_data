@@ -279,9 +279,38 @@ Si cerca di evitare di avere operazioni che richiedono righe distribuite su diff
 \end{enumerate}
 
 \subsection{What is a transaction? What is an Index? How physically is SQL organized?}
+Una \textbf{transaction} è un'operazione su un database che rispetta le proprietà ACID (Atomicity, Consistency, Isolation e Durability).
+\newline Un \textbf{Index} è una struttura dati che migliora la velocità delle operazioni di recupero dei dati sulle tabelle dei databases, al costo di avere scritture addizionali e spazio di archiviazione aggiuntivo per mantenere la stuttura dati dell'indice. Gli indici sono utilizzati per \textbf{trovare velocemente i dati} senza bisogno di cercare in ogni riga di un database ogni volta che viene eseguito l'accesso a quella tabella del database. Gli indici possono essere creati utilizzando una o più colonne di una tabella di un database, fornendo le basi sia per ricerche casuali rapide che per efficienti accessi a dati ordinati
+\newline Fisicamente, SQL è organizzato in Data files e Log Files. I Data Files sono composti da pagine, ogni pagina possiede un header, l'indirizzo della pagina successiva, i dati veri e propri (organizzati in data rows), dello spazio libero e i puntatori alle singole data rows. Queste pagine sono organizzate in \textbf{Extent}, ovvero raggruppamenti di 8 pagine per un totale di 64 kBytes. Gli Extents possono essere di due tipi: \textit{Uniform} se contengono solo pagine di dati o \textit{Mixed} se oltre ai dati hanno anche tabelle con gli Indici.
+
 \subsection{Describe what happens when you try to execute a SQL Statements}
+\begin{enumerate}
+    \item Una SQL query viene convertita in \textbf{pacchetti TDS} (Tabular Data Stream) usando o \textbf{ODBC} o \textbf{OLEDB} o \textbf{SNAC} (SQL Native Client) o \textbf{SNI} (SQL Server Network Intrface)
+    \item Una volta che i pacchetti TDS raggiungono l'endpoint del server, l'SNI \textbf{decapsula} questi pacchetti in comandi SQL e li passa al \textbf{Query Parser}
+    \item Un \textbf{query plan} è generato, ottimizzato e presentato al \textbf{Query Executor}
+    \item Il Query Executor \textbf{richiede i dati} ai metodi di accesso
+    \item I metodi di accesso \textbf{recuperano quelle pagine di dati} e le passano al query executor per eseguire la query
+    \item Se la query è una non-select query i metodi di accesso contattano i \textbf{Transaction Manager Components}:
+    \begin{enumerate}
+        \item \textbf{Log Manager}
+        \item \textbf{Lock Manager}
+        \item Il Transaction Manager genera un \textbf{Log Sequential Number} (LSN) e lo usa per assicurare la transazionalità
+        \item \textbf{Dirty Pages} sono scritte per assicurare la capacità di rollback
+    \end{enumerate}
+    \item Il \textbf{Tabular Data Stream} viene rimandato indietro
+\end{enumerate}
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=\linewidth]{fig/SQLstatement.png}
+    \label{fig:SQLstatement}
+\end{figure}
+
 \subsection{How to write from Apache Spark? Pro and Con(s)}
 \subsection{Spark Dataframe}
+Un \textbf{Dataframe} è un Dataset organizzato in colonne con un nome. E' concettualmente equivalente a una tabella in un database relazionale o ad un data frame i R/Python, ma possiede una maggiore ricchezza di ottimizzazioni. 
+\newline I Dataframes possono essere costruiti da una larga varietà di risorse, tra cui: file con dati strutturati, tabelle in Hive, databases esterni, o RDDs esistenti
+
 \section{Distribute Processes}
 \subsection{What is a SOA? How can you map SOA with Architectural Principles?}
 Ci sono numerose definizioni di cosa sia una Service-Oriented Architecture, tra cui:
@@ -294,6 +323,46 @@ DA FINIRE...
 
 \subsection{During the class we discussed several times about differences between Services and uServices: can you give an example to show the differences?}
 \subsection{Service Definition, Service Queue, Service Broker}
+Esattamente come per la definizione di SOA, anche per la definizioe di \textbf{service} abbiamo diverse versioni:
+\begin{itemize}
+    \item IBM 2007 - "Un service è una risorsa scopribile che esegue un'attività ripetibile, ed è descritto da una specifica di servizio esternalizzata". E' basato su:
+    \begin{itemize}
+        \item \textit{Business alignment} - Servizio non basato sulle capacità IT, ma sui bisogni dell'azienda
+        \item \textit{Specifiche} - I servizi sono autonomi e descritti in termini di interfaccia, operazioni, semantica, comportamenti dinamici, politiche e qualità del servizio
+        \item \textit{Reusability} - La riusabilità dei servizi è sostenuta dalla granularità delle decisioni di design
+        \item \textit{Agreements} - Gli accordi sui servizi sono tra entità, cioè tra consumatore e fornitore (basati sulle specifiche e non sull'implementazione)
+        \item \textit{Hosting and Discoverability} - Durante il loro ciclo di vita, i servizi sono ospitati e scopribili, come supportato dai metadati, registri e cartelle dei servizi
+        \item \textit{Aggregation} - I servizi debolmente accoppiati sono aggregati in processi di business intra- o inter-imprese
+    \end{itemize}
+    \item The Open Group 2007 - Un servizio:
+    \begin{itemize}
+        \item E' una rappresentazione logica di una attività di business ripetibile che ha uno specifico risultato
+        \item E' autonomo
+        \item Può essere composto da altri servizi
+        \item E' una "black box" per il cliente del servizio
+    \end{itemize}
+    \item OMG 2007 - Un servizio è un valore fornito a un altro attraverso un'interfaccia ben definita e disponibile per una comunità (che può essere il pubblico in generale).
+    Un servizio si traduce in lavoro fornito l'uno dall'altro.
+\end{itemize}
+Nell'atto pratico, un \textbf{servizio} è definito, al di fuori dell'implementazione, da:
+\begin{enumerate}
+    \item Un \textbf{SERVICENAME} unico
+    \item Una \textbf{versione}
+    \item Un \textbf{tipo di esecuzione} (Sync/Async/...)
+    \item Una \textbf{logging mode} (before, after,...)
+    \item Un \textbf{MessageIn}, ovvero la configurazione e la struttura dei dati in ingresso
+    \item Un \textbf{MessageOut}, ovvero la configurazione e la struttura dei dati in uscita
+    \item Un cono di \textbf{visibilità}
+\end{enumerate}
+Ogni Servizio può essere legato a uno o più Server Object.
+\newline La \textbf{Service Queue} è la lista di tutti i Servizi in esecuzione. E' l'unico punto in cui si può monitorare la saluto di ogni singolo processo ed è tecnicamente una tabella SQL.
+\newline Il \textbf{Service Broker}, invece, implementa il service broker pattern:
+\begin{enumerate}
+    \item Invia i servizi al corretto application server
+    \item Gestisce la Service Queue
+    \item Aggiorna lo stato del Servizio e i MessageIn/MessageOut
+\end{enumerate}
+
 \subsection{IMPORTANT - Describe all Communication Models we have seen during the class}
 \subsubsection{Syncronous Service Call}
 
