@@ -16,7 +16,7 @@
 \section{Enterprise Architecture}
 \subsection{Describe the link between building architecture and software architecture? What are common concepts between this two subjects?}
 
-La building architecture è l’arte o la pratica di progettare e costruire strutture, specialmente le abilitabili, utilizzando forme e strutture coerenti. Allo stesso la software architecture è l’arte o la pratica di organizzare e scegliere lo stile che incapsula e connette le varie componenti software. 
+La building architecture è l’arte o la pratica di progettare e costruire strutture, specialmente le abitabili, utilizzando forme e strutture coerenti. Allo stesso modo, la software architecture è l’arte o la pratica di organizzare e scegliere lo stile che incapsula e connette le varie componenti software. 
 Altri punti in comune presi dalla building architecture e proiettati nella software architecture sono:
 \begin{itemize}
     \item Visioni multiple
@@ -30,7 +30,7 @@ Le viste di prospetto possono essere integrate da disegni contestuali o anche mo
 Si hanno anche differenti stakeholder; Ogni prospettiva non è solo una questione di diverso livello di dettaglio. È collegato a diverse nature e responsabilità.
 Il proprietario ha bisogno dell'edificio per uno scopo specifico. Lui non sa come, ma sa perfettamente perché.
 L'architetto ha bisogno di progettare e formalizzare qualcosa che si adatti perfettamente alle esigenze del proprietario, per pianificare il cosa.
-Il Costruttore deve progettare come ciò che verrà costruito rispettando le leggi naturali e i vincoli tecnologici.
+Il Costruttore deve progettare come ciò verrà costruito rispettando le leggi naturali e i vincoli tecnologici.
 
 Allo stesso modo nella software architecture diverse tipologie di utenti utilizzeranno l'Architettura del Software: ognuno di loro avrà bisogno di un punto di vista specifico.
 Uno sviluppatore Full Stack deve sapere come scrivere codice all'interno dell'architettura mentre un Data Scientist dove sono i dati di cui ha bisogno.
@@ -71,7 +71,7 @@ L'essenza dell'astrazione è riconoscere un modello, nominarlo e definirlo, anal
 Questo processo elimina i dettagli dell'implementazione del modello, riduce l'opportunità di errori materiali e semplifica la comprensione del risultato.
 In altre parole, una buona astrazione è ignorare i dettagli giusti al momento giusto.
 
-Un’astrazione caKura proprietà essenziali dei soKo-sistemi più importan* e i modi in cui interagiscono. Inizialmente, i problemi vengono risol* ad hoc; più si accumula esperienza, più si notano soluzioni migliori altre, con un passaggio di folklore che viene passato informalmente da persona a persona. Pian piano, le soluzioni migliori vengono capite meglio e vengono codificate ed analizzate.
+Un'astrazione cattura proprietà essenziali dei sotto-sistemi più importanti e i modi in cui interagiscono. Inizialmente, i problemi vengono risolti ad hoc; più si accumula esperienza, più si notano soluzioni migliori altre, con un passaggio di folklore che viene passato informalmente da persona a persona. Pian piano, le soluzioni migliori vengono capite meglio e vengono codificate ed analizzate.
 
 
 Lo sviluppo delle singole astrazioni segue spesso uno schema comune:
@@ -83,7 +83,7 @@ Lo sviluppo delle singole astrazioni segue spesso uno schema comune:
 \end{itemize}
 Un'esempio di astrazione è quello utilizzato nello schema ISO/OSI.
 \subsection{What are the main pillars of any Software Architectures? Describe each of them with practical example to show the added value}
-Le colonne portan* di un’architettura sono:
+Le colonne portanti di un’architettura sono:
 \begin{itemize}
     \item Essere il framework per la soddisfazione dei requisiti: Funzionali, tecnici e di sicurezza (GDPR)
     \item Essere la base tecnica per il design: indica la strada da seguire per le interfacce dettagliate degli elementi di progettazione, algoritmi, procedure e tipi di dato
@@ -319,9 +319,30 @@ Ci sono numerose definizioni di cosa sia una Service-Oriented Architecture, tra 
     \item "Service-Oriented Architecture (SOA) è uno stile architetturale che supporta l'\textbf{orientamento ai servizi}. L'orientamento ai servizi è un modo di pensare in termini di \textbf{servizi}, \textbf{sviluppo basato sui servizi} e \textbf{risultati dei servizi}" (The Open Group 2007)
     \item "Service-Oriented Architecture (SOA) è un paradigma per organizzare e utilizzare capacità distribuite che potrebbero essere sotto il controllo di diversi domini di proprietà" (OASIS)
 \end{itemize}
-DA FINIRE...
+
+SOA è basato sul modo di pensare a servizi, per garantire un collegamento più stretto tra IT e business. 
+Un servizio è una risorsa scopribile che esegue un task ripetuto ed è descritto da una specificazione esterna del servizio.
+Rappresentano bisogni e servizi nel mondo del business. Persone, organizzazioni e sistemi offrono e usano servizi offerti l'uno dall'altro.
+Ogni servizio è identificato e ciò che fa viene specificato chiaramente sottoforma di contratto e viene offerto con una interfaccia ben chiara al pubblico. 
+Può essere inoltre visto come un sistema distribuito in cui agenti software devono lavorare tra loro comunicando tramite protoclli Hardware e Software.
+
+SOA layers:
+\begin{itemize}
+    \item Sistemi operativi: le applicazioni già presenti nel sistema (legacy system)
+    \item componenti aziendali dei servizi: che realizzano funzionalità e garantiscono QOS dei servizi esposti, ad esempio gestire il work load e garantire una buona affidabilità. Permettono di chiamare le risorse del livello aziendale dei servizi.
+    \item Processi di business: Composizione di servizi del livello precedente per offrire una applicazione completa per il business.
+    \item Layer di accesso/presentazione/clienti (??)
+    \item Integrazione: per gestire meglio le richieste
+    \item QOS: monitora, gestisce la sicurezza, le perfomance e l'affidabilità
+\end{itemize}
 
 \subsection{During the class we discussed several times about differences between Services and uServices: can you give an example to show the differences?}
+Servizi e microservizi sono in parte uguali, cioè condividono lo stesso obiettivo, quello di garantire una maggiore flessibilità e incentivare il focus sull'aspetto business.
+L'idea è molto simile, ma troviamo differenze nel lato pratico: 
+Nelle architetture SOA i servizi sono pochi che svolgono più operazioni comunicando tra loro mediante un unico bus comune, che se dovesse fallire bloccherebbe tutti i servizi.
+Invece nelle architetture di microservizi, i servizi vengono scomposti fino ad individuare una singola responsabilità applicativa e non hanno un bus comune, ma comunicano direttamente tra di loro usando protocolli semplici e leggeri. I microservizi sono piccoli e autonomi, possono essere scritti in linguaggi diversi e sono self-contained.
+Un'altra differenza sta nel contenere i dati. Nelle SOA lo storage è uno spazio comune, mentre in un'architettura basata su microservizi ognuno può avere il suo storage.
+Nei microservizi le logiche e il funzionamento sono nascosti.
 \subsection{Service Definition, Service Queue, Service Broker}
 Esattamente come per la definizione di SOA, anche per la definizioe di \textbf{service} abbiamo diverse versioni:
 \begin{itemize}
